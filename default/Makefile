@@ -9,12 +9,14 @@ UZEBIN_DIR = ../../../bin
 ## Kernel settings
 KERNEL_DIR = ../../../kernel
 
-KERNEL_OPTIONS = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DTILE_WIDTH=8 -DSCREEN_TILES_V=19 -DFIRST_RENDER_LINE=68
-KERNEL_OPTIONS += -DMAX_SPRITES=1 -DRAM_TILES_COUNT=18 -DRESOLUTION_EXT=1 -DVRAM_TILES_H=32 ##-DSNES_MOUSE=1
+KERNEL_OPTIONS = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DTILE_WIDTH=8 -DSCREEN_TILES_V=15 -DFIRST_RENDER_LINE=68
+KERNEL_OPTIONS += -DMAX_SPRITES=1 -DRAM_TILES_COUNT=4 -DRESOLUTION_EXT=1 -DVRAM_TILES_H=32 ##-DSNES_MOUSE=1
+KERNEL_OPTIONS += -DUART=2 -DUART_RX_BUFFER_SIZE=256 -DUART_TX_BUFFER_SIZE=8
 KERNEL_OPTIONS += -DSOUND_MIXER=0 -DENABLE_MIXER=0 -DCONTROLLERS_VSYNC_READ=0 -DTRANSLUCENT_COLOR=0xC7
+KERNEL_OPTIONS += -DPF_USE_LSEEK=1 -DPF_USE_DIR=1 -DSPIRAM_DETECT_SIZE=1 ##-DPF_USE_WRITE=1
 
 ## Demo settings
-DEMO_OPTIONS = -DFORMAT_EEPROM=1
+##DEMO_OPTIONS = -DFORMAT_EEPROM=1
 
 ## Options common to compile, link and assembly rules
 COMMON = -mmcu=$(MCU)
@@ -47,7 +49,7 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 
 ## Objects that must be built in order to link
-OBJECTS = uzeboxVideoEngineCore.o uzeboxCore.o uzeboxVideoEngine.o spiram.o bootlib.o $(PROJECT).o soundMixerVsync.o 
+OBJECTS = uzeboxVideoEngineCore.o uzeboxCore.o uzeboxVideoEngine.o pff.o diskio.o spiram.o $(PROJECT).o soundMixerVsync.o
 
 ## Objects explicitly added by the user
 LINKONLYOBJECTS = 
@@ -56,7 +58,7 @@ LINKONLYOBJECTS =
 INCLUDES = -I"$(KERNEL_DIR)" 
 
 ## Resources
-RESOURCES = ../data/tiles.inc
+#RESOURCES = ../data/tiles.inc ../data/adpcm.inc
 
 ## Build
 all: $(RESOURCES) $(TARGET) $(PROJECT).hex $(PROJECT).eep $(PROJECT).lss $(PROJECT).uze size
@@ -64,6 +66,9 @@ all: $(RESOURCES) $(TARGET) $(PROJECT).hex $(PROJECT).eep $(PROJECT).lss $(PROJE
 ## Rebuild graphics resources
 ../data/tiles.inc: ../data/tiles.png ../data/tiles.xml
 	$(UZEBIN_DIR)/gconvert ../data/tiles.xml
+
+#../data/adpcm.inc: ../data/uzemod.raw
+#	$(UZEBIN_DIR)/dconvert ../data/adpcm.cfg
 
 ## Compile Kernel files
 uzeboxVideoEngineCore.o: $(KERNEL_DIR)/uzeboxVideoEngineCore.s
@@ -78,8 +83,11 @@ soundMixerVsync.o: $(KERNEL_DIR)/soundMixerVsync.s
 uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
-bootlib.o: $(KERNEL_DIR)/bootlib.s $(DIRS)
-	$(CC) $(INCLUDES) $(ASMFLAGS) -c $< -o $@
+diskio.o: $(KERNEL_DIR)/petitfatfs/diskio.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+
+pff.o: $(KERNEL_DIR)/petitfatfs/pff.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 spiram.o: $(KERNEL_DIR)/spiram.s $(DIRS)
 	$(CC) $(INCLUDES) $(ASMFLAGS) -c $< -o $@
