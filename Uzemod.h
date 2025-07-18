@@ -1,6 +1,21 @@
+#include <avr/io.h>
+#include <stdlib.h>
+#include <string.h>
+#include <avr/pgmspace.h>
+#include <uzebox.h>
+#include <spiram.h>
+#include <petitfatfs/pffconf.h>
+#include <petitfatfs/diskio.h>
+#include <petitfatfs/pff.h>
+#include "data/tiles.inc"
+//#include "uzenet/unCore.h"
+
 extern u8 ram_tiles[];
 extern u8 vram[];
 extern u8 mix_buf[];
+extern BYTE rcv_spi();
+#define	SD_SELECT()	PORTD &=  ~(1<<6)
+#define	SD_DESELECT()	PORTD |=  (1<<6)
 
 extern volatile u8 mix_bank;
 extern u16 joypad1_status_lo, joypad2_status_lo;
@@ -10,11 +25,11 @@ extern u16 joypad1_status_hi, joypad2_status_hi;
 #define UZENET_EEPROM_ID0	32
 #define UZENET_EEPROM_ID1	UZENET_EEPROM_ID0+1
 
-#define NO_FINE_TUNE_TABLE 1
-#define NO_SAMPLE_VOLUME 1
-#define DEFAULT_SAMPLE_VOLUME 64
+#define NO_FINE_TUNE_TABLE	0
+#define NO_SAMPLE_VOLUME	0
+#define DEFAULT_SAMPLE_VOLUME	64
 
-#define MOD_BASE		0
+#define MOD_BASE		0UL//1024*3
 #define SAMPLE_HEADER_BASE	(MOD_BASE + 20UL)
 #define SAMPLE_HEADER_SIZE	(22UL + 2UL + 1UL + 1UL + 2UL + 2UL) // 30 bytes
 #define PATTERN_BASE		(MOD_BASE + 1084UL)
@@ -45,36 +60,38 @@ extern u16 joypad1_status_hi, joypad2_status_hi;
 #define TILE_WIN_BBAR	TILE_WIN_TBAR+1
 #define TILE_WIN_LBAR	TILE_WIN_BRC+1
 #define TILE_WIN_RBAR	TILE_WIN_LBAR+1
+#define TILE_WIN_SCRU	TILE_WIN_RBAR+1
+#define TILE_WIN_SCRD	TILE_WIN_SCRU+1
 
-typedef struct {
+typedef struct{
 	u32 spiBase;	//offset in SPI RAM
 	u32 currentptr;	//integer playback pointer
 	u32 length;	//total sample length in bytes
 	u32 loopStart;	//loop start offset in bytes
 	u32 looplength;	//loop length in bytes
 	u32 period;	//fractional step accumulator
-	s32 volume;	//current volume 0..64
+	u8 volume;//s32 volume;	//current volume 0..64
 	u32 currentsubptr; //fractional sub-pointer (lower 16 bits used)
-} PaulaChannel_t;
+}PaulaChannel_t;
 
-typedef struct {
+typedef struct{
 	u32 length;	//full sample length in bytes
 	u32 loopStart;	//loop start offset in bytes
 	u32 looplength;	//loop length in bytes
 	u8 finetune;
 	u8 volume;
 	u32 spiBase;
-} Sample_t;
+}Sample_t;
 
-typedef struct {
+typedef struct{
 	s16 val;
 	u8 waveform;
 	u8 phase;
 	u8 speed;
 	u8 depth;
-} Oscillator_t;
+}Oscillator_t;
 
-typedef struct {
+typedef struct{
 	u32 note;
 	u8 sample, eff, effval;
 	u8 slideamount, sampleoffset;
@@ -83,9 +100,9 @@ typedef struct {
 	u32 period;
 	Oscillator_t vibrato, tremolo;
 	PaulaChannel_t samplegen;
-} TrackerChannel_t;
+}TrackerChannel_t;
 
-typedef struct {
+typedef struct{
 	u8 orders;
 	u8 maxpattern;
 	u8 order;
@@ -99,48 +116,70 @@ typedef struct {
 	u8 patloopcycle;
 	u32 audiospeed;
 	u32 audiotick;
+	u8 fastforward;
 	u32 random;
 	TrackerChannel_t ch[MOD_CHANNELS];
 	Sample_t samples[MAX_SAMPLES];
-} ModPlayerStatus_t;
+}ModPlayerStatus_t;
 
 static ModPlayerStatus_t mp;
-static sdc_struct_t sd;
+FATFS fs;
 static s16 accum_span[BUFFER_SIZE];
 static u8 cony = 2;
 static u32 detected_ram;
 //static u16 spi_seeks;
 u16 oldpad, pad;
-u8 fast_forward = 0;
-u8 fast_backward = 0;
 u8 play_state = 0;
 u8 masterVolume = 64;
+u16 total_files;
+u8 dirty_sectors = 0;
 
-#define PS_STOP		1
-#define PS_PAUSE	2
-#define PS_SHUFFLE	4
+#define PS_LOADED	1
+#define PS_PLAYING	2
+#define PS_STOP		4
+#define PS_PAUSE	8
+#define PS_SHUFFLE	16
+#define PS_DRAWN	32
 
 u8 ptime_min,ptime_sec,ptime_frame;
 
 #define PTIME_X	SCREEN_TILES_H-9
 #define PTIME_Y	2
-static u8 InitMOD();
+
+static void RecalculateWaveform(Oscillator_t *oscillator);
+static void ProcessMOD();
+static void RestartMOD();
+static void SilenceBuffer();
 static void RenderMOD();
-void DebugDump(u32 off);
-static void UserInterface();
+static u8 PlayMOD(u8 reload);
+
+static void Intro();
+static void UpdateCursor(u8 ylimit);
+static void PlayerInterface();
+static void InputDeviceHandler();
 static void UMPrint(u8 x, u8 y, const char *s);
+static void UMPrintRam(u8 x, u8 y, char *s);
 static void UMPrintChar(u8 x, u8 y, char c);
-static void DrawWindow(u8 x, u8 y, u8 w, u8 h);
-static void PrintSongTitle(u8 x, u8 y);
+static void DrawWindow(u8 x, u8 y, u8 w, u8 h, const char *title, const char *lb, const char *rb);
+static void PrintSongTitle(u8 x, u8 y, u8 len);
+static u8 IsRootDir();
+static void PreviousDir();
+static void NextDir(char *s);
+static u8 LoadDirData(u8 entry, u8 root);
 static void FileSelectWindow();
 static void RestartMOD();
-static void SetSkin(u8 val);
-static u8 SavePreferences();
-static u8 LoadPreferences();
+static void SavePreferences();
+static void LoadPreferences();
+static void SpiRamWriteStringEntry(u32 pos, char prefix, char *s);
+static void SpiRamWriteStringEntryFlash(u32 pos, const char *s);
+static u16 SpiRamStringLen(u32 pos);
+static u8 SpiRamPrintString(u8 x, u8 y, u32 pos, u8 invert, u8 fill);
+static void SpiRamCopyStringNoBuffer(u32 dst, u32 src, u8 max);
+static u8 ButtonHit(u8 x, u8 y, u8 w, u8 h);
 
 #define DEFAULT_COLOR_MASK	0b00000111
 
-static const u8 bad_masks[] PROGMEM = {0,1,2,3,8,9,10,11,16,17,18,19,24,25,26,27,64,65,66,67,72,73,74,75,80,81,82,83,88,89,90,91,};
+static const u8 bad_masks[] PROGMEM = {0,1,2,3,8,9,10,11,16,17,18,19,24,25,26,27,64,65,66,67,72,73,74,75,80,81,82,83,88,89,90,91,};//skip those not legible
 static const s32 finetune_table[16] PROGMEM = {
 	65536, 65065, 64596, 64132,
 	63670, 63212, 62757, 62306,
