@@ -58,7 +58,7 @@ LINKONLYOBJECTS =
 INCLUDES = -I"$(KERNEL_DIR)" 
 
 ## Resources
-#RESOURCES = ../data/tiles.inc ../data/adpcm.inc
+RESOURCES = ../data/tiles.inc #../data/adpcm.inc
 
 ## Build
 all: $(RESOURCES) $(TARGET) $(PROJECT).hex $(PROJECT).eep $(PROJECT).lss $(PROJECT).uze size
