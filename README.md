@@ -26,6 +26,7 @@ _Web emulator demo coming when I get a chance._
 ## Building
 
 1. Place the Uzemod folder under your uzebox-master/demos/ directory:
+```text
 uzebox-master/
 └── demos/
 └── Uzemod/
@@ -33,12 +34,12 @@ uzebox-master/
 ├── Uzemod.h
 └── default/
 └── Makefile
-
-2. Navigate into the demo build directory:  
+```
+3. Navigate into the demo build directory:  
    ```bash
    cd uzebox-master/demos/Uzemod/default
 
-3. Build with avr-gcc. This will produce a .hex file, and if have the proper packrom at ../../../bin/packrom, it will also create a .uze file
+4. Build with avr-gcc. This will produce a .hex file, and if have the proper packrom at ../../../bin/packrom, it will also create a .uze file
 
 make
 
