@@ -1,5 +1,5 @@
 ## General Flags
-PROJECT = Uzemod
+PROJECT = UzeMOD
 MCU = atmega644
 TARGET = $(PROJECT).elf
 CC = avr-gcc
@@ -11,7 +11,7 @@ KERNEL_DIR = ../../../kernel
 
 KERNEL_OPTIONS = -DVIDEO_MODE=3 -DINTRO_LOGO=0 -DTILE_WIDTH=8 -DSCREEN_TILES_V=15 -DFIRST_RENDER_LINE=68
 KERNEL_OPTIONS += -DMAX_SPRITES=1 -DRAM_TILES_COUNT=4 -DRESOLUTION_EXT=1 -DVRAM_TILES_H=32 ##-DSNES_MOUSE=1
-KERNEL_OPTIONS += -DUART=2 -DUART_RX_BUFFER_SIZE=256 -DUART_TX_BUFFER_SIZE=8
+KERNEL_OPTIONS += -DUART=2 -DUART_RX_BUFFER_SIZE=256 -DUART_TX_BUFFER_SIZE=8 -DINCLUDE_DEFAULT_WAVES=0
 KERNEL_OPTIONS += -DSOUND_MIXER=0 -DENABLE_MIXER=0 -DCONTROLLERS_VSYNC_READ=0 -DTRANSLUCENT_COLOR=0xC7
 KERNEL_OPTIONS += -DPF_USE_LSEEK=1 -DPF_USE_DIR=1 -DSPIRAM_DETECT_SIZE=1 ##-DPF_USE_WRITE=1
 
@@ -49,7 +49,7 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings
 
 
 ## Objects that must be built in order to link
-OBJECTS = uzeboxVideoEngineCore.o uzeboxCore.o uzeboxVideoEngine.o pff.o diskio.o spiram.o $(PROJECT).o soundMixerVsync.o
+OBJECTS = uzeboxVideoEngineCore.o uzeboxCore.o uzeboxVideoEngine.o pff.o diskio.o spiram.o $(PROJECT).o soundMixerCustom.o
 
 ## Objects explicitly added by the user
 LINKONLYOBJECTS = 
@@ -67,7 +67,7 @@ all: $(RESOURCES) $(TARGET) $(PROJECT).hex $(PROJECT).eep $(PROJECT).lss $(PROJE
 ../data/tiles.inc: ../data/tiles.png ../data/tiles.xml
 	$(UZEBIN_DIR)/gconvert ../data/tiles.xml
 
-#../data/adpcm.inc: ../data/uzemod.raw
+#../data/adpcm.inc: ../data/UzeMOD.raw
 #	$(UZEBIN_DIR)/dconvert ../data/adpcm.cfg
 
 ## Compile Kernel files
@@ -77,7 +77,7 @@ uzeboxVideoEngineCore.o: $(KERNEL_DIR)/uzeboxVideoEngineCore.s
 uzeboxCore.o: $(KERNEL_DIR)/uzeboxCore.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
-soundMixerVsync.o: $(KERNEL_DIR)/soundMixerVsync.s
+soundMixerCustom.o: ../soundMixerCustom.s
 	$(CC) $(INCLUDES) $(ASMFLAGS) -c  $<
 
 uzeboxVideoEngine.o: $(KERNEL_DIR)/uzeboxVideoEngine.c
