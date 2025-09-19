@@ -1,10 +1,10 @@
-# Uzemod
+# UzeMOD
 
 4-channel MOD file player for Uzebox. Based on [MODPlay](https://github.com/prochazkaml/MODPlay) by Michal Procházka. Uses basically every free CPU cycle to just barely pull it off :)
 
 ## Overview
 
-Uzemod is a standalone `.mod` player for the Uzebox platform. It supports 4 channels (ProTracker format), making heavy use of Uzenet expansion RAM. An SD card **and** expansion RAM are _required_ for playback.
+UzeMOD is a standalone `.mod` player for the Uzebox platform. It supports 4 channels (ProTracker format), making heavy use of Uzenet expansion RAM. An SD card **and** expansion RAM are _required_ for playback.
 
 Thanks do danboid for back and forth testing, feedback, live demonstration at Northwest Computer Museum, and this demo video:
 
@@ -25,19 +25,19 @@ _Web emulator demo coming when I get a chance._
 
 ## Building
 
-1. Place the Uzemod folder under your uzebox-master/demos/ directory:
+1. Place the UzeMOD folder under your uzebox-master/demos/ directory:
 ```text
 uzebox-master/
 └── demos/
-└── Uzemod/
-├── Uzemod.c
-├── Uzemod.h
+└── UzeMOD/
+├── UzeMOD.c
+├── UzeMOD.h
 └── default/
 └── Makefile
 ```
 3. Navigate into the demo build directory:  
    ```bash
-   cd uzebox-master/demos/Uzemod/default
+   cd uzebox-master/demos/UzeMOD/default
 
 4. Build with avr-gcc. This will produce a .hex file, and if have the proper packrom at ../../../bin/packrom, it will also create a .uze file
 
