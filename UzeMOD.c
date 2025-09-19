@@ -1,4 +1,4 @@
-#include "Uzemod.h"
+#include "UzeMOD.h"
 
 
 static void RecalculateWaveform(Oscillator_t *oscillator){
@@ -60,7 +60,8 @@ static void ProcessMOD(){
 				mp.ch[ch].period = mp.ch[ch].note;
 
 			if(sample_tmp){
-				if(sample_tmp > MAX_SAMPLES) sample_tmp = 1;
+				if(sample_tmp > MAX_SAMPLES)
+					sample_tmp = 1;
 				mp.ch[ch].sample = sample_tmp - 1;
 				Sample_t *smp = &mp.samples[sample_tmp - 1];
 				PaulaChannel_t *pch = &mp.ch[ch].samplegen;
@@ -85,8 +86,10 @@ static void ProcessMOD(){
 					pch->currentptr = 0;
 					pch->currentsubptr = 0;
 					mp.ch[ch].period = mp.ch[ch].note;
-					if(mp.ch[ch].vibrato.waveform < 4) mp.ch[ch].vibrato.phase = 0;
-					if(mp.ch[ch].tremolo.waveform < 4) mp.ch[ch].tremolo.phase = 0;
+					if(mp.ch[ch].vibrato.waveform < 4)
+						mp.ch[ch].vibrato.phase = 0;
+					if(mp.ch[ch].tremolo.waveform < 4)
+						mp.ch[ch].tremolo.phase = 0;
 				}
 			}
 			//effect commands...
@@ -498,8 +501,10 @@ static void RenderMOD(){
 		}else{
 			for(u16 s=0; s<span_len; s++){
 				s32 scaled = (accum_span[s] * (int32_t)masterVolume) >> 14;//8+6
-				if(scaled > 127) scaled = 127;
-				else if(scaled < -128) scaled = -128;
+				if(scaled > 127)
+					scaled = 127;
+				else if(scaled < -128)
+					scaled = -128;
 				int8_t signedOut = (int8_t)scaled;
 				buf[offset + s] = (uint8_t)(signedOut + 128);
 			}
@@ -767,13 +772,12 @@ int main(){
 		goto MAIN_FAIL;
 	}
 
-	u8 bank_count = SpiRamInit();
+	u8 bank_count = SpiRamInitGetSize();
 
 	if(!bank_count){
 		UMPrint(3,cony++,PSTR("ERROR: No SPI RAM detected"));
 		goto MAIN_FAIL;
 	}else{
-		bank_count = 2;//BANK HACK
 		detected_ram = (u32)(bank_count*(64UL*1024UL));
 		u8 moff = 21;		//>=65536
 		if(bank_count > 1)	//>=131072
@@ -806,7 +810,7 @@ MAIN_FAIL:
 }
 
 
-static void InputDeviceHandler(){//requires the kernel to *NOT* read controllers during VSYNC
+static void InputDeviceHandler(){
 	u8 i;
 	joypad1_status_lo = joypad2_status_lo = joypad1_status_hi = joypad2_status_hi = 0;
 
@@ -879,7 +883,7 @@ static void DrawWindow(u8 x, u8 y, u8 w, u8 h, const char *title, const char *lb
 	if(rb != NULL){
 		u8 xo = x+w;
 		for(u8 i=0; i<16; i++){
-			if(pgm_read_byte(rb[i]) == '\0')
+			if(pgm_read_byte(&rb[i]) == '\0')
 				break;
 			xo--;
 		}
