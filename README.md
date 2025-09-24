@@ -12,8 +12,8 @@ Thanks do danboid for back and forth testing, feedback, live demonstration at No
 
 For emulation:
 
-- [CUzeBox](https://github.com/Jubatian/cuzebox) supports 128 KB.  
-- [CUzeBoxESP8266](https://github.com/weber21w/cuzebox-8266) supports 512 KB modules.  
+- [CUzeBox](https://github.com/Jubatian/cuzebox) supports 128KB(limits what files can be loaded).  
+- [CUzeBoxESP8266](https://github.com/weber21w/cuzebox-8266) supports 128KB-8MB modules.  
 
 _Web emulator demo coming when I get a chance._
 
