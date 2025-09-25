@@ -2,6 +2,8 @@
 
 4-channel MOD file player for Uzebox. Based on [MODPlay](https://github.com/prochazkaml/MODPlay) by Michal Procházka. Uses basically every free CPU cycle to just barely pull it off :)
 
+
+See discussion on the [Uzebox forums](https://uzebox.org/forums/viewtopic.php?t=11501)
 ## Overview
 
 UzeMOD is a standalone `.mod` player for the Uzebox platform. It supports 4 channels (ProTracker format), making heavy use of Uzenet expansion RAM. An SD card **and** expansion RAM are _required_ for playback.
