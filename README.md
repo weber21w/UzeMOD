@@ -8,7 +8,7 @@ See discussion on the [Uzebox forums](https://uzebox.org/forums/viewtopic.php?t=
 
 UzeMOD is a standalone `.mod` player for the Uzebox platform. It supports 4 channels (ProTracker format), making heavy use of Uzenet expansion RAM. An SD card **and** expansion RAM are _required_ for playback.
 
-Thanks do danboid for back and forth testing, feedback, live demonstration at Northwest Computer Museum, and this demo video:
+Thanks to danboid for back and forth testing, feedback, and this demo video:
 
 [![Watch the demo](https://img.youtube.com/vi/CSrFbTvUJGQ/0.jpg)](https://youtu.be/CSrFbTvUJGQ)
 
